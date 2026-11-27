@@ -468,6 +468,7 @@
         <button class="btn" id="p90Btn">计算 P90</button>
         <button class="btn secondary" id="clearBtn">清空</button>
       </div>
+      <button class="btn green" id="exportBtn">导出 Excel</button>
 
       <div class="result" id="p90Result">
         <div class="result-label">P90 耗时（点击可复制）</div>
@@ -630,8 +631,11 @@
         if (row) updateRow(row);
       });
 
+      var lastStats = null;
+
       function calcP90() {
         p90Msg.textContent = '';
+        lastStats = null;
         var durs = [], bad = false;
         Array.prototype.forEach.call(rowsEl.querySelectorAll('.row'), function (r, i) {
           var res = updateRow(r, true);
@@ -654,7 +658,56 @@
         p90Stats.innerHTML = 'P90 = ' + p90.toFixed(3) + ' 秒（有效 ' + sorted.length + ' 次，取升序第 ' + rank + ' 个）<br>' +
           '最小 ' + sorted[0].toFixed(2) + 's　最大 ' + sorted[sorted.length - 1].toFixed(2) + 's　平均 ' + (sum / sorted.length).toFixed(2) + 's';
         p90Result.classList.add('show');
+        lastStats = { p90: p90, rank: rank, n: sorted.length, min: sorted[0], max: sorted[sorted.length - 1], avg: sum / sorted.length };
       }
+
+      function esc(s) {
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      // 导出为 Excel（HTML 表格格式的 .xls，Excel/WPS 可直接打开）
+      function exportExcel() {
+        calcP90();
+        if (!lastStats) return;
+        var st = lastStats;
+        var cell = function (v, extra) { return '<td style="mso-number-format:\'\\@\';' + (extra || '') + '">' + esc(v) + '</td>'; };
+        var html = '<table border="1">' +
+          '<tr><th>序号</th><th>开始时间</th><th>结束时间</th><th>耗时(s)</th></tr>';
+        Array.prototype.forEach.call(rowsEl.querySelectorAll('.row'), function (r, i) {
+          var ins = r.querySelectorAll('input');
+          if (!ins[0].value.trim() && !ins[1].value.trim()) return;
+          var dur = ins[2].value.replace(/\s*s$/, '');
+          html += '<tr><td>' + (i + 1) + '</td>' + cell(ins[0].value.trim()) + cell(ins[1].value.trim()) +
+            '<td>' + esc(dur) + '</td></tr>';
+        });
+        html += '<tr><td colspan="4"></td></tr>' +
+          '<tr><th colspan="2">帧率(FPS)</th><td colspan="2">' + esc(fpsSel.value) + '</td></tr>' +
+          '<tr><th colspan="2">有效次数</th><td colspan="2">' + st.n + '</td></tr>' +
+          '<tr><th colspan="2">P90 耗时(s)</th><td colspan="2">' + st.p90.toFixed(3) + '</td></tr>' +
+          '<tr><th colspan="2">P90 时间格式</th>' + cell(fmtSeconds(st.p90), '').replace('<td', '<td colspan="2"') + '</tr>' +
+          '<tr><th colspan="2">P90 取值位置</th><td colspan="2">升序第 ' + st.rank + ' 个</td></tr>' +
+          '<tr><th colspan="2">最小(s)</th><td colspan="2">' + st.min.toFixed(2) + '</td></tr>' +
+          '<tr><th colspan="2">最大(s)</th><td colspan="2">' + st.max.toFixed(2) + '</td></tr>' +
+          '<tr><th colspan="2">平均(s)</th><td colspan="2">' + st.avg.toFixed(2) + '</td></tr>' +
+          '</table>';
+        var doc = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">' +
+          '<head><meta charset="UTF-8"></head><body>' + html + '</body></html>';
+        var blob = new Blob(['\ufeff' + doc], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        var d = new Date();
+        var name = 'P90统计_' + d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '_' +
+          pad2(d.getHours()) + pad2(d.getMinutes()) + pad2(d.getSeconds()) + '.xls';
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+        p90Msg.style.color = '#3ecf8e';
+        p90Msg.textContent = '已导出：' + name;
+        setTimeout(function () { p90Msg.style.color = ''; }, 3000);
+      }
+      $('exportBtn').addEventListener('click', exportExcel);
 
       // 把最近转换的时间码填入下一个空格
       fillBtn.addEventListener('click', function () {
