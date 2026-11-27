@@ -459,7 +459,7 @@
         <div class="fps-note">当前帧率：<b id="fpsNote">60</b> fps</div>
       </div>
 
-      <div class="col-head"><span></span><span>开始 HH:MM:SS:FF</span><span>结束 HH:MM:SS:FF</span><span>结束 − 开始</span>
+      <div class="col-head"><span></span><span>开始 HH:MM:SS.CC</span><span>结束 HH:MM:SS.CC</span><span>结束 − 开始</span>
       </div>
       <div class="rows" id="rows"></div>
 
@@ -528,7 +528,7 @@
           if (mm >= 60) { mm -= 60; hh += 1; }
         }
         resultValue.textContent = pad2(hh) + ':' + pad2(mm) + ':' + pad2(ss) + '.' + pad2(centi);
-        lastTc = normalized;
+        lastTc = resultValue.textContent;
         resultBox.classList.add('show');
         copyTip.textContent = '点击上方数字复制';
         fillTip.textContent = '按「开始 → 结束」顺序填入下一个空格';
@@ -545,13 +545,20 @@
       var p90Btn = $('p90Btn'), clearBtn = $('clearBtn');
       var p90Result = $('p90Result'), p90Value = $('p90Value'), p90Tip = $('p90Tip'), p90Stats = $('p90Stats');
 
+      // 同时支持 HH:MM:SS:FF（帧）和 HH:MM:SS.CC（转换后的百分秒），统一返回秒数
       function parseTc(str, fps) {
-        var m = str.trim().replace(/：/g, ':').match(/^(\d{1,2}):(\d{1,2}):(\d{1,2}):(\d{1,2})$/);
+        var s = str.trim().replace(/：/g, ':');
+        var d = s.match(/^(\d{1,2}):(\d{1,2}):(\d{1,2})\.(\d{1,2})$/);
+        if (d) {
+          if (+d[2] > 59 || +d[3] > 59) return { err: '分/秒超出范围' };
+          var cs = d[4].length === 1 ? +d[4] * 10 : +d[4];
+          return { sec: ((+d[1] * 60 + +d[2]) * 60 + +d[3]) + cs / 100 };
+        }
+        var m = s.match(/^(\d{1,2}):(\d{1,2}):(\d{1,2}):(\d{1,2})$/);
         if (!m) return { err: '格式错误' };
-        var hh = +m[1], mm = +m[2], ss = +m[3], ff = +m[4];
-        if (mm > 59 || ss > 59) return { err: '分/秒超出范围' };
-        if (ff >= fps) return { err: '帧需小于 ' + fps };
-        return { frames: ((hh * 60 + mm) * 60 + ss) * fps + ff };
+        if (+m[2] > 59 || +m[3] > 59) return { err: '分/秒超出范围' };
+        if (+m[4] >= fps) return { err: '帧需小于 ' + fps };
+        return { sec: (((+m[1] * 60 + +m[2]) * 60 + +m[3]) * fps + +m[4]) / fps };
       }
 
       function fmtSeconds(sec) {
@@ -579,12 +586,12 @@
         var a = parseTc(ins[0].value, fps), b = parseTc(ins[1].value, fps);
         if (a.err) { ins[0].classList.add('error'); durEl.value = '—'; durEl.classList.add('bad'); return { err: '开始时间' + a.err }; }
         if (b.err) { ins[1].classList.add('error'); durEl.value = '—'; durEl.classList.add('bad'); return { err: '结束时间' + b.err }; }
-        if (b.frames < a.frames) {
+        if (Math.round((b.sec - a.sec) * 1000) < 0) {
           ins[1].classList.add('error');
           durEl.value = '结束早于开始'; durEl.classList.add('bad');
           return { err: '结束时间早于开始时间' };
         }
-        var d = (b.frames - a.frames) / fps;
+        var d = Math.max(0, b.sec - a.sec);
         durEl.value = d.toFixed(2) + ' s';
         return { sec: d };
       }
@@ -605,8 +612,8 @@
           var row = document.createElement('div');
           row.className = 'row';
           row.innerHTML = '<span class="idx">' + (i + 1) + '</span>' +
-            '<input type="text" inputmode="numeric" placeholder="00:00:00:00" autocomplete="off" />' +
-            '<input type="text" inputmode="numeric" placeholder="00:00:00:00" autocomplete="off" />' +
+            '<input type="text" inputmode="numeric" placeholder="00:00:00.00" autocomplete="off" />' +
+            '<input type="text" inputmode="numeric" placeholder="00:00:00.00" autocomplete="off" />' +
             '<input type="text" class="dur" readonly tabindex="-1" placeholder="—" />';
           var ins = row.querySelectorAll('input');
           if (old[i]) { ins[0].value = old[i][0]; ins[1].value = old[i][1]; }
