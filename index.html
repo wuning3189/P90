@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>时间码转换工具</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg1: #1e2a44;
+      --bg2: #0f1626;
+      --panel: rgba(255, 255, 255, 0.06);
+      --line: rgba(255, 255, 255, 0.12);
+      --text: #e8edf6;
+      --sub: #9fb0cc;
+      --dim: #7e8caa;
+      --accent: #4a90e2;
+      --accent-light: #7ab8ff;
+      --danger: #e2554a;
+      --ok: #3ecf8e;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 100%) fixed;
+      min-height: 100vh;
+      padding: 24px;
+      color: var(--text);
+    }
+
+    .page-title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .page-sub {
+      text-align: center;
+      font-size: 13px;
+      color: var(--sub);
+      margin: 4px 0 20px;
+    }
+
+    .layout {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .left {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: sticky;
+      top: 24px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px 20px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
+    }
+
+    .sec-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sec-title::before {
+      content: "";
+      width: 4px;
+      height: 16px;
+      border-radius: 2px;
+      background: var(--accent);
+    }
+
+    .sec-sub {
+      font-size: 12px;
+      color: var(--sub);
+      margin-bottom: 18px;
+      line-height: 1.6;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: #b9c6df;
+      margin-bottom: 8px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      height: 44px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 16px;
+      padding: 0 12px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.28);
+    }
+
+    input:hover,
+    select:hover {
+      background: rgba(255, 255, 255, 0.11);
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.25);
+    }
+
+    input.error {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(226, 85, 74, 0.22);
+    }
+
+    select option {
+      color: #000;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--dim);
+      margin-top: 6px;
+    }
+
+    .msg {
+      min-height: 18px;
+      font-size: 12px;
+      margin: 4px 0 8px;
+      color: #ff8a7f;
+    }
+
+    .btn {
+      width: 100%;
+      height: 46px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #4a90e2, #357abd);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .1s, filter .2s, background .2s;
+    }
+
+    .btn:hover {
+      filter: brightness(1.1);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn.secondary {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .btn.green {
+      background: linear-gradient(135deg, #2fb67c, #238f61);
+      margin-top: 12px;
+      height: 42px;
+    }
+
+    .btn.small {
+      width: auto;
+      height: 38px;
+      padding: 0 18px;
+      font-size: 14px;
+    }
+
+    .result {
+      margin-top: 18px;
+      padding: 18px 14px;
+      border-radius: 12px;
+      background: rgba(74, 144, 226, 0.12);
+      border: 1px dashed rgba(74, 144, 226, 0.45);
+      text-align: center;
+      display: none;
+    }
+
+    .result.show {
+      display: block;
+      animation: pop .25s ease;
+    }
+
+    @keyframes pop {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .result-label {
+      font-size: 12px;
+      color: var(--sub);
+      margin-bottom: 6px;
+    }
+
+    .result-value {
+      font-size: 30px;
+      font-weight: 700;
+      color: var(--accent-light);
+      letter-spacing: 2px;
+      font-variant-numeric: tabular-nums;
+      cursor: pointer;
+      user-select: all;
+    }
+
+    .copy-tip {
+      font-size: 11px;
+      color: var(--dim);
+      margin-top: 6px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar .field {
+      margin: 0;
+      width: 140px;
+    }
+
+    .toolbar .fps-note {
+      font-size: 12px;
+      color: var(--sub);
+      padding-bottom: 12px;
+      flex: 1;
+    }
+
+    .col-head,
+    .row {
+      display: grid;
+      grid-template-columns: 28px 1fr 1fr 110px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .col-head {
+      font-size: 12px;
+      color: var(--sub);
+      margin-bottom: 6px;
+      text-align: center;
+      padding-right: 6px;
+    }
+
+    .rows {
+      max-height: 420px;
+      overflow-y: auto;
+      padding-right: 6px;
+      margin-bottom: 8px;
+    }
+
+    .row {
+      margin-bottom: 8px;
+    }
+
+    .row .idx {
+      font-size: 12px;
+      color: var(--dim);
+      text-align: right;
+    }
+
+    .row input {
+      height: 38px;
+      font-size: 14px;
+      padding: 0 8px;
+      min-width: 0;
+    }
+
+    .row input.focus-next {
+      border-color: var(--ok);
+      box-shadow: 0 0 0 3px rgba(62, 207, 142, 0.2);
+    }
+
+    .row input.dur {
+      text-align: center;
+      color: var(--accent-light);
+      font-weight: 600;
+      background: rgba(74, 144, 226, 0.1);
+      cursor: default;
+    }
+
+    .row input.dur.bad {
+      color: #ff8a7f;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .actions .btn {
+      flex: 1;
+    }
+
+    .stats {
+      font-size: 12px;
+      color: var(--sub);
+      margin-top: 10px;
+      line-height: 1.8;
+    }
+
+    .explain h3 {
+      font-size: 14px;
+      color: var(--accent-light);
+      margin: 12px 0 4px;
+    }
+
+    .explain p,
+    .explain li {
+      font-size: 13px;
+      color: #c3cee3;
+      line-height: 1.8;
+    }
+
+    .explain ul {
+      padding-left: 18px;
+    }
+
+    .explain code {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      color: #ffd98a;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        padding: 14px;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .left {
+        position: static;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-title">时间码转换工具</div>
+  <div class="page-sub">时:分:秒:帧 → 时:分:秒.百分秒，并支持多次测试的 P90 耗时统计</div>
+
+  <div class="layout">
+    <!-- 左侧：转换 -->
+    <div class="left">
+      <div class="card">
+        <div class="sec-title">时间码转换</div>
+        <div class="sec-sub">输入时间码，转换为带百分秒的时间</div>
+
+        <div class="field">
+          <label for="input">输入时间码（HH:MM:SS:FF）</label>
+          <input id="input" type="text" inputmode="numeric" placeholder="00:00:00:00" value="00:00:00:00"
+            autocomplete="off" />
+          <div class="hint">格式：两位时 : 两位分 : 两位秒 : 两位帧，回车可直接转换</div>
+        </div>
+
+        <div class="field">
+          <label for="fps">帧率（FPS，P90 统计也使用此值）</label>
+          <select id="fps">
+            <option value="24">24</option>
+            <option value="25">25</option>
+            <option value="30">30</option>
+            <option value="50">50</option>
+            <option value="60" selected>60</option>
+          </select>
+        </div>
+
+        <div class="msg" id="msg"></div>
+        <button class="btn" id="convertBtn">转换</button>
+
+        <div class="result" id="result">
+          <div class="result-label">转换结果（点击可复制）</div>
+          <div class="result-value" id="resultValue">00:00:00.00</div>
+          <div class="copy-tip" id="copyTip">点击上方数字复制</div>
+          <button class="btn green" id="fillBtn">⬇ 填入 P90 表格</button>
+          <div class="copy-tip" id="fillTip">按「开始 → 结束」顺序填入下一个空格</div>
+        </div>
+      </div>
+
+      <div class="card explain">
+        <div class="sec-title">什么是 P90？</div>
+        <p>P90（第 90 百分位数）表示：把多次测试的耗时从小到大排序后，有 90% 的结果不超过这个值。</p>
+        <h3>为什么用它</h3>
+        <p>平均值容易被个别极快或极慢的结果拉偏，P90 能反映“大多数情况下最慢会多久”，常用于衡量启动、加载、响应等耗时的稳定表现。</p>
+        <h3>本工具的算法</h3>
+        <ul>
+          <li>耗时 = 结束时间 − 开始时间（按帧数换算成秒）</li>
+          <li>升序排序，取第 <code>⌈0.9 × N⌉</code> 个（最近秩法）</li>
+          <li>例：10 次测试，取第 9 小的耗时</li>
+        </ul>
+        <h3>注意</h3>
+        <p>次数太少时 P90 参考意义有限，建议至少 10 次。空行会被忽略。</p>
+      </div>
+    </div>
+
+    <!-- 右侧：P90 -->
+    <div class="card">
+      <div class="sec-title">P90 统计</div>
+      <div class="sec-sub">填写每次测试的开始 / 结束时间码，耗时自动计算；可用左侧转换结果一键填入</div>
+
+      <div class="toolbar">
+        <div class="field">
+          <label for="runs">测试次数</label>
+          <select id="runs">
+            <option value="10" selected>10 次</option>
+            <option value="20">20 次</option>
+            <option value="50">50 次</option>
+            <option value="100">100 次</option>
+          </select>
+        </div>
+        <div class="fps-note">当前帧率：<b id="fpsNote">60</b> fps</div>
+      </div>
+
+      <div class="col-head"><span></span><span>开始 HH:MM:SS:FF</span><span>结束 HH:MM:SS:FF</span><span>结束 − 开始</span>
+      </div>
+      <div class="rows" id="rows"></div>
+
+      <div class="msg" id="p90Msg"></div>
+      <div class="actions">
+        <button class="btn" id="p90Btn">计算 P90</button>
+        <button class="btn secondary" id="clearBtn">清空</button>
+      </div>
+
+      <div class="result" id="p90Result">
+        <div class="result-label">P90 耗时（点击可复制）</div>
+        <div class="result-value" id="p90Value">00:00:00.00</div>
+        <div class="copy-tip" id="p90Tip">点击上方数字复制</div>
+        <div class="stats" id="p90Stats"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
+      var input = $('input'), fpsSel = $('fps'), msg = $('msg'), btn = $('convertBtn');
+      var resultBox = $('result'), resultValue = $('resultValue'), copyTip = $('copyTip');
+      var fillBtn = $('fillBtn'), fillTip = $('fillTip'), fpsNote = $('fpsNote');
+      var lastTc = '';   // 最近一次成功转换的原始时间码（HH:MM:SS:FF）
+
+      function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+      function copyText(text, onDone) {
+        function fallback() {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); onDone(); } catch (e) { }
+          document.body.removeChild(ta);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(onDone).catch(fallback);
+        } else { fallback(); }
+      }
+
+      function showError(text) {
+        msg.textContent = text;
+        input.classList.add('error');
+        resultBox.classList.remove('show');
+      }
+
+      function convert() {
+        msg.textContent = '';
+        input.classList.remove('error');
+        var fps = parseInt(fpsSel.value, 10);
+        var normalized = input.value.trim().replace(/：/g, ':');
+        var m = normalized.match(/^(\d{1,2}):(\d{1,2}):(\d{1,2}):(\d{1,2})$/);
+        if (!m) { showError('格式错误，应为 HH:MM:SS:FF，例如 00:00:01:30'); return; }
+
+        var hh = +m[1], mm = +m[2], ss = +m[3], ff = +m[4];
+        if (mm > 59) { showError('分钟非法：' + m[2] + '，应为 00-59'); return; }
+        if (ss > 59) { showError('秒非法：' + m[3] + '，应为 00-59'); return; }
+        if (ff >= fps) { showError('帧非法：' + m[4] + '，在 ' + fps + 'fps 下帧应为 00-' + pad2(fps - 1)); return; }
+
+        var centi = Math.round(ff / fps * 100);
+        if (centi >= 100) {
+          centi -= 100; ss += 1;
+          if (ss >= 60) { ss -= 60; mm += 1; }
+          if (mm >= 60) { mm -= 60; hh += 1; }
+        }
+        resultValue.textContent = pad2(hh) + ':' + pad2(mm) + ':' + pad2(ss) + '.' + pad2(centi);
+        lastTc = normalized;
+        resultBox.classList.add('show');
+        copyTip.textContent = '点击上方数字复制';
+        fillTip.textContent = '按「开始 → 结束」顺序填入下一个空格';
+      }
+
+      btn.addEventListener('click', convert);
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') convert(); });
+      resultValue.addEventListener('click', function () {
+        copyText(resultValue.textContent, function () { copyTip.textContent = '已复制 ✓'; });
+      });
+
+      // ===== P90 =====
+      var runsSel = $('runs'), rowsEl = $('rows'), p90Msg = $('p90Msg');
+      var p90Btn = $('p90Btn'), clearBtn = $('clearBtn');
+      var p90Result = $('p90Result'), p90Value = $('p90Value'), p90Tip = $('p90Tip'), p90Stats = $('p90Stats');
+
+      function parseTc(str, fps) {
+        var m = str.trim().replace(/：/g, ':').match(/^(\d{1,2}):(\d{1,2}):(\d{1,2}):(\d{1,2})$/);
+        if (!m) return { err: '格式错误' };
+        var hh = +m[1], mm = +m[2], ss = +m[3], ff = +m[4];
+        if (mm > 59 || ss > 59) return { err: '分/秒超出范围' };
+        if (ff >= fps) return { err: '帧需小于 ' + fps };
+        return { frames: ((hh * 60 + mm) * 60 + ss) * fps + ff };
+      }
+
+      function fmtSeconds(sec) {
+        var c = Math.round(sec * 100);
+        var h = Math.floor(c / 360000); c -= h * 360000;
+        var mi = Math.floor(c / 6000); c -= mi * 6000;
+        var s = Math.floor(c / 100); c -= s * 100;
+        return pad2(h) + ':' + pad2(mi) + ':' + pad2(s) + '.' + pad2(c);
+      }
+
+      function allInputs() { return rowsEl.querySelectorAll('input:not(.dur)'); }
+
+      // 实时更新单行“结束 − 开始”；返回秒数，无效返回 null
+      function updateRow(row, strict) {
+        var fps = parseInt(fpsSel.value, 10);
+        var ins = row.querySelectorAll('input');
+        var durEl = row.querySelector('.dur');
+        ins[0].classList.remove('error'); ins[1].classList.remove('error');
+        durEl.classList.remove('bad');
+        durEl.value = '';
+        if (!ins[0].value.trim() || !ins[1].value.trim()) {
+          if (strict && (ins[0].value.trim() || ins[1].value.trim())) return { err: '开始或结束时间未填写' };
+          return null;
+        }
+        var a = parseTc(ins[0].value, fps), b = parseTc(ins[1].value, fps);
+        if (a.err) { ins[0].classList.add('error'); durEl.value = '—'; durEl.classList.add('bad'); return { err: '开始时间' + a.err }; }
+        if (b.err) { ins[1].classList.add('error'); durEl.value = '—'; durEl.classList.add('bad'); return { err: '结束时间' + b.err }; }
+        if (b.frames < a.frames) {
+          ins[1].classList.add('error');
+          durEl.value = '结束早于开始'; durEl.classList.add('bad');
+          return { err: '结束时间早于开始时间' };
+        }
+        var d = (b.frames - a.frames) / fps;
+        durEl.value = d.toFixed(2) + ' s';
+        return { sec: d };
+      }
+
+      function highlightNext() {
+        Array.prototype.forEach.call(allInputs(), function (i) { i.classList.remove('focus-next'); });
+      }
+
+      function buildRows() {
+        var n = parseInt(runsSel.value, 10);
+        var old = [];
+        Array.prototype.forEach.call(rowsEl.querySelectorAll('.row'), function (r) {
+          var ins = r.querySelectorAll('input');
+          old.push([ins[0].value, ins[1].value]);
+        });
+        rowsEl.innerHTML = '';
+        for (var i = 0; i < n; i++) {
+          var row = document.createElement('div');
+          row.className = 'row';
+          row.innerHTML = '<span class="idx">' + (i + 1) + '</span>' +
+            '<input type="text" inputmode="numeric" placeholder="00:00:00:00" autocomplete="off" />' +
+            '<input type="text" inputmode="numeric" placeholder="00:00:00:00" autocomplete="off" />' +
+            '<input type="text" class="dur" readonly tabindex="-1" placeholder="—" />';
+          var ins = row.querySelectorAll('input');
+          if (old[i]) { ins[0].value = old[i][0]; ins[1].value = old[i][1]; }
+          rowsEl.appendChild(row);
+          updateRow(row);
+        }
+        p90Msg.textContent = '';
+        p90Result.classList.remove('show');
+      }
+
+      // 输入时实时计算该行
+      rowsEl.addEventListener('input', function (e) {
+        var row = e.target.closest('.row');
+        if (row) updateRow(row);
+      });
+
+      function calcP90() {
+        p90Msg.textContent = '';
+        var durs = [], bad = false;
+        Array.prototype.forEach.call(rowsEl.querySelectorAll('.row'), function (r, i) {
+          var res = updateRow(r, true);
+          if (!res) return;
+          if (res.err) { if (!bad) p90Msg.textContent = '第 ' + (i + 1) + ' 行：' + res.err; bad = true; return; }
+          durs.push(res.sec);
+        });
+        if (bad) { p90Result.classList.remove('show'); return; }
+        if (!durs.length) {
+          p90Msg.textContent = '请至少填写一行开始/结束时间';
+          p90Result.classList.remove('show');
+          return;
+        }
+        var sorted = durs.slice().sort(function (x, y) { return x - y; });
+        var rank = Math.ceil(0.9 * sorted.length);
+        var p90 = sorted[rank - 1];
+        var sum = sorted.reduce(function (x, y) { return x + y; }, 0);
+        p90Value.textContent = fmtSeconds(p90);
+        p90Tip.textContent = '点击上方数字复制';
+        p90Stats.innerHTML = 'P90 = ' + p90.toFixed(3) + ' 秒（有效 ' + sorted.length + ' 次，取升序第 ' + rank + ' 个）<br>' +
+          '最小 ' + sorted[0].toFixed(2) + 's　最大 ' + sorted[sorted.length - 1].toFixed(2) + 's　平均 ' + (sum / sorted.length).toFixed(2) + 's';
+        p90Result.classList.add('show');
+      }
+
+      // 把最近转换的时间码填入下一个空格
+      fillBtn.addEventListener('click', function () {
+        if (!lastTc) return;
+        var list = allInputs();
+        var target = null;
+        for (var i = 0; i < list.length; i++) {
+          if (!list[i].value.trim()) { target = list[i]; break; }
+        }
+        if (!target) { fillTip.textContent = '表格已满，请增加测试次数或清空'; return; }
+        target.value = lastTc;
+        var row = target.closest('.row');
+        updateRow(row);
+        var isStart = target === row.querySelectorAll('input')[0];
+        fillTip.textContent = '已填入第 ' + row.querySelector('.idx').textContent + ' 行' + (isStart ? '开始' : '结束') + ' ✓';
+        row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      });
+
+      runsSel.addEventListener('change', buildRows);
+      fpsSel.addEventListener('change', function () {
+        fpsNote.textContent = fpsSel.value;
+        if (input.value.trim()) convert();
+        Array.prototype.forEach.call(rowsEl.querySelectorAll('.row'), function (r) { updateRow(r); });
+        p90Result.classList.remove('show');
+      });
+      p90Btn.addEventListener('click', calcP90);
+      clearBtn.addEventListener('click', function () {
+        Array.prototype.forEach.call(allInputs(), function (i) { i.value = ''; });
+        Array.prototype.forEach.call(rowsEl.querySelectorAll('.row'), function (r) { updateRow(r); });
+        p90Msg.textContent = '';
+        p90Result.classList.remove('show');
+      });
+      p90Value.addEventListener('click', function () {
+        copyText(p90Value.textContent, function () { p90Tip.textContent = '已复制 ✓'; });
+      });
+
+      buildRows();
+      convert();
+    })();
+  </script>
+</body>
+
+</html>
