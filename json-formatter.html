@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="JSON 格式化、压缩、校验、转义与树形查看" />
+  <title>JSON 格式化 - 工具集</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="common.css" />
+  <link rel="stylesheet" href="components.css" />
+  <link rel="stylesheet" href="json.css" />
+</head>
+
+<body>
+  <header class="app-header">
+    <a class="brand" href="index.html" title="返回首页"><span class="brand-mark">T</span>工具集</a>
+    <span class="crumb">JSON 格式化</span>
+  </header>
+
+  <div class="wrap">
+    <h1 class="page-title">JSON 格式化</h1>
+    <p class="page-sub">格式化、压缩、校验、转义，能定位语法错误并修复常见的非标准写法。内容只在当前浏览器中处理。</p>
+
+    <section class="panel panel-pad toolbar" aria-label="操作栏">
+      <div class="flex">
+        <button id="btnFormat" class="tbtn primary" type="button" title="Ctrl + Enter">格式化</button>
+        <button id="btnMinify" class="tbtn" type="button">压缩</button>
+        <button id="btnEscape" class="tbtn" type="button" title="把文本转成 JSON 字符串字面量">转义</button>
+        <button id="btnUnescape" class="tbtn" type="button" title="还原 \n、\" 等转义字符">去转义</button>
+        <span class="sep"></span>
+        <label class="lbl" for="indent">缩进</label>
+        <select id="indent" class="tin">
+          <option value="2" selected>2 空格</option>
+          <option value="4">4 空格</option>
+          <option value="8">8 空格</option>
+          <option value="tab">Tab</option>
+        </select>
+        <label class="chk"><input id="optSort" type="checkbox" />键排序</label>
+        <label class="chk" title="支持注释、单引号、末尾逗号、未加引号的键"><input id="optLoose" type="checkbox" checked />宽松语法修复</label>
+        <label class="chk" title="字符串里若是 JSON 文本，自动解开"><input id="optUnwrap" type="checkbox" checked />解开嵌套字符串</label>
+        <label class="chk"><input id="optAscii" type="checkbox" />中文转 \u</label>
+        <label class="chk"><input id="optPaste" type="checkbox" checked />粘贴后自动格式化</label>
+        <span class="app-spacer"></span>
+        <button id="btnSample" class="tbtn" type="button">示例</button>
+        <label class="tbtn">导入文件<input id="fileInput" type="file" accept=".json,.txt,application/json,text/plain"
+            hidden /></label>
+        <button id="btnClear" class="tbtn" type="button">清空</button>
+      </div>
+    </section>
+
+    <div class="split">
+      <section class="panel pane" aria-label="输入">
+        <div class="panel-head">
+          <strong class="head-title">输入</strong>
+          <span id="inCount" class="lbl">0 字符</span>
+        </div>
+        <textarea id="input" class="editor" spellcheck="false"
+          placeholder="在这里粘贴 JSON，按 Ctrl + Enter 格式化。也可以把文件拖进来。"></textarea>
+      </section>
+
+      <section class="panel pane" aria-label="输出">
+        <div class="panel-head">
+          <div class="flex">
+            <button id="tabText" class="tbtn sm active" type="button">文本</button>
+            <button id="tabTree" class="tbtn sm" type="button">树形</button>
+            <span id="treeTools" class="flex" hidden>
+              <button id="btnExpand" class="tbtn sm" type="button">全部展开</button>
+              <button id="btnCollapse" class="tbtn sm" type="button">全部折叠</button>
+            </span>
+          </div>
+          <div class="flex">
+            <button id="btnCopy" class="tbtn sm" type="button">复制</button>
+            <button id="btnDownload" class="tbtn sm" type="button">下载</button>
+            <button id="btnApply" class="tbtn sm" type="button" title="把输出放回输入框">应用到输入</button>
+          </div>
+        </div>
+        <div id="banner" class="banner" hidden></div>
+        <div id="stats" class="stats" hidden></div>
+        <pre id="outText" class="out" tabindex="0"></pre>
+        <div id="outTree" class="out tree-wrap" tabindex="0" hidden></div>
+      </section>
+    </div>
+
+    <section class="panel panel-pad query">
+      <h2 class="panel-title">路径查询</h2>
+      <p class="panel-sub">输入路径取出局部内容，例如 <code>data.list[0].name</code> 或
+        <code>$.users[2]["first name"]</code>。树形视图里点击键名可以复制它的路径。</p>
+      <div class="flex">
+        <input id="query" class="tin mono grow" type="text" placeholder="data.list[0].name" autocomplete="off"
+          aria-label="路径" />
+        <button id="btnQueryCopy" class="tbtn" type="button">复制结果</button>
+      </div>
+      <pre id="queryOut" class="query-out"></pre>
+    </section>
+  </div>
+
+  <footer class="app-footer">内容仅在当前浏览器中处理</footer>
+  <script src="ui.js"></script>
+  <script src="json.js"></script>
+</body>
+
+</html>

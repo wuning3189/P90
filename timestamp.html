@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Unix 时间戳与日期时间互转，支持时区、批量转换、时间差与时间推算" />
+  <title>时间戳转换 - 工具集</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="common.css" />
+  <link rel="stylesheet" href="components.css" />
+  <link rel="stylesheet" href="timestamp.css" />
+</head>
+
+<body>
+  <header class="app-header">
+    <a class="brand" href="index.html" title="返回首页"><span class="brand-mark">T</span>工具集</a>
+    <span class="crumb">时间戳转换</span>
+  </header>
+
+  <div class="wrap">
+    <h1 class="page-title">时间戳转换</h1>
+    <p class="page-sub">Unix 时间戳与日期时间互转，自动识别秒 / 毫秒 / 微秒 / 纳秒，支持任意时区。点击结果可直接复制。</p>
+
+    <section class="panel panel-pad now-panel" aria-label="当前时间">
+      <div class="now-grid">
+        <div>
+          <div class="lbl">当前时间戳（秒）</div>
+          <button id="nowSec" class="now-val" type="button" title="点击复制">0</button>
+        </div>
+        <div>
+          <div class="lbl">当前时间戳（毫秒）</div>
+          <button id="nowMs" class="now-val" type="button" title="点击复制">0</button>
+        </div>
+        <div>
+          <div class="lbl">当前时间</div>
+          <button id="nowText" class="now-val small" type="button" title="点击复制">-</button>
+        </div>
+        <div class="now-ctl">
+          <label class="lbl" for="tz">时区（全页生效）</label>
+          <div class="flex">
+            <select id="tz" class="tin grow"></select>
+            <button id="pauseBtn" class="tbtn" type="button">暂停</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid2">
+      <section class="panel panel-pad" aria-label="时间戳转日期">
+        <h2 class="panel-title">时间戳 → 日期时间</h2>
+        <p class="panel-sub">支持整数和小数，单位默认自动识别。</p>
+        <div class="flex">
+          <input id="tsIn" class="tin mono grow" type="text" inputmode="decimal"
+            placeholder="例如 1700000000 或 1700000000000" autocomplete="off" aria-label="时间戳" />
+          <select id="tsUnit" class="tin" aria-label="单位">
+            <option value="auto" selected>自动识别</option>
+            <option value="s">秒</option>
+            <option value="ms">毫秒</option>
+            <option value="us">微秒</option>
+            <option value="ns">纳秒</option>
+          </select>
+          <button id="tsNow" class="tbtn" type="button">取当前</button>
+        </div>
+        <p id="tsMsg" class="msg"></p>
+        <div id="tsOut" class="kv-list"></div>
+      </section>
+
+      <section class="panel panel-pad" aria-label="日期转时间戳">
+        <h2 class="panel-title">日期时间 → 时间戳</h2>
+        <p class="panel-sub">格式如 <code>2024-05-20 13:14:00</code>，也支持
+          <code>2024/5/20</code>、<code>20240520131400</code>、带 Z 或 +08:00 的 ISO 格式。无偏移时按所选时区解释。</p>
+        <div class="flex">
+          <input id="dtIn" class="tin mono grow" type="text" placeholder="YYYY-MM-DD HH:mm:ss" autocomplete="off"
+            aria-label="日期时间" />
+          <input id="dtPick" class="tin" type="datetime-local" step="1" aria-label="选择日期时间" />
+          <button id="dtNow" class="tbtn" type="button">取当前</button>
+        </div>
+        <p id="dtMsg" class="msg"></p>
+        <div id="dtOut" class="kv-list"></div>
+      </section>
+    </div>
+
+    <div class="grid2">
+      <section class="panel panel-pad" aria-label="批量转换">
+        <h2 class="panel-title">批量转换</h2>
+        <p class="panel-sub">每行一个值。数字当作时间戳转日期，其余按日期转时间戳。</p>
+        <div class="flex">
+          <label class="lbl" for="batchUnit">日期转时间戳输出</label>
+          <select id="batchUnit" class="tin">
+            <option value="s">秒</option>
+            <option value="ms" selected>毫秒</option>
+          </select>
+          <span class="app-spacer"></span>
+          <button id="batchCopy" class="tbtn" type="button">复制结果</button>
+        </div>
+        <div class="batch">
+          <textarea id="batchIn" class="tin mono" spellcheck="false"
+            placeholder="1700000000&#10;1700000000123&#10;2024-05-20 13:14:00" aria-label="批量输入"></textarea>
+          <textarea id="batchOut" class="tin mono" spellcheck="false" readonly aria-label="批量结果"></textarea>
+        </div>
+      </section>
+
+      <div class="stack">
+        <section class="panel panel-pad" aria-label="时间差">
+          <h2 class="panel-title">时间差</h2>
+          <p class="panel-sub">两端都可以填时间戳或日期时间。</p>
+          <div class="flex">
+            <input id="diffA" class="tin mono grow" type="text" placeholder="开始：时间戳或日期" autocomplete="off"
+              aria-label="开始" />
+            <input id="diffB" class="tin mono grow" type="text" placeholder="结束：时间戳或日期" autocomplete="off"
+              aria-label="结束" />
+            <button id="diffNow" class="tbtn" type="button" title="结束取当前时间">结束=现在</button>
+          </div>
+          <p id="diffMsg" class="msg"></p>
+          <div id="diffOut" class="kv-list"></div>
+        </section>
+
+        <section class="panel panel-pad" aria-label="时间推算">
+          <h2 class="panel-title">时间推算</h2>
+          <p class="panel-sub">在某个时间上加减一段时间。天、周、月、年按所选时区的日历计算。</p>
+          <div class="flex">
+            <input id="calcBase" class="tin mono grow" type="text" placeholder="基准：留空为现在" autocomplete="off"
+              aria-label="基准时间" />
+            <select id="calcSign" class="tin" aria-label="加减">
+              <option value="1" selected>加</option>
+              <option value="-1">减</option>
+            </select>
+            <input id="calcAmount" class="tin mono" type="number" value="7" step="1" style="width:90px"
+              aria-label="数量" />
+            <select id="calcUnit" class="tin" aria-label="单位">
+              <option value="s">秒</option>
+              <option value="m">分钟</option>
+              <option value="h">小时</option>
+              <option value="d" selected>天</option>
+              <option value="w">周</option>
+              <option value="mo">月</option>
+              <option value="y">年</option>
+            </select>
+          </div>
+          <p id="calcMsg" class="msg"></p>
+          <div id="calcOut" class="kv-list"></div>
+        </section>
+      </div>
+    </div>
+
+    <section class="panel panel-pad quick" aria-label="常用时间点">
+      <h2 class="panel-title">常用时间点</h2>
+      <p class="panel-sub">按所选时区计算，点击任意时间戳复制。</p>
+      <div id="quickOut" class="quick-grid"></div>
+    </section>
+  </div>
+
+  <footer class="app-footer">内容仅在当前浏览器中处理</footer>
+  <script src="ui.js"></script>
+  <script src="timestamp.js"></script>
+</body>
+
+</html>

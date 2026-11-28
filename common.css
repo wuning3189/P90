@@ -1,0 +1,107 @@
+/* 全站共用：设计变量、顶栏、页脚。各功能页只写自己的业务样式。 */
+:root {
+  --brand: #4f6cf7;
+  --brand-dark: #3d58dc;
+  --brand-soft: #eef1ff;
+  --navy: #172033;
+  --bg: #f1f4f9;
+  --surface: #ffffff;
+  --line: #e1e6ee;
+  --text: #172033;
+  --muted: #6b7689;
+  --ok: #16a36a;
+  --danger: #d64545;
+  --radius: 12px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --mono: "DM Mono", Consolas, "Microsoft YaHei", monospace;
+  color: var(--text);
+  font-family: var(--font);
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: 60px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #fff;
+  background: var(--navy);
+  border-bottom: 1px solid #2d374e;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: .02em;
+  text-decoration: none;
+}
+
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: var(--brand);
+  font: 700 13px/1 var(--mono);
+}
+
+.brand:hover .brand-mark {
+  background: var(--brand-dark);
+}
+
+.brand:focus-visible,
+.app-header a:focus-visible {
+  outline: 3px solid rgba(112, 139, 255, .6);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.crumb {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  color: #c9d3e8;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.crumb::before {
+  content: "/";
+  color: #55617c;
+}
+
+.app-spacer {
+  flex: 1;
+}
+
+.app-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.app-footer {
+  padding: 22px 16px 30px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
